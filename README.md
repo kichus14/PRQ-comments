@@ -10,4 +10,4 @@ Provide the list of comments given by the KBC tech lead
     ```npm start```
 5. Open second terminal and go to the client folder (cd client)
     ```npm start```
-
+6. It will work in KBC network only.
