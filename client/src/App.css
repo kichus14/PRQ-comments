@@ -61,3 +61,5 @@ margin-bottom: auto;
   line-height: 1.5;
   border-radius: 3px;
 }
+
+.react-bootstrap-table table { table-layout: auto !important; }
