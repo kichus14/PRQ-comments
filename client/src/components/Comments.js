@@ -13,10 +13,22 @@ import paginationFactory from 'react-bootstrap-table2-paginator';
 function Comments(props) {
     const [commentList, setCommentListState] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [prqTitle, setPRQTitle] = useState('');
     const commentData = [];
     let allComment = [];
 
     const {ExportCSVButton} = CSVExport;
+
+    const formatDate = (cell) => {
+      if(cell === '') {
+        return '';
+      }
+      let dateObj = cell;
+      if (typeof cell !== 'object') {
+        dateObj = new Date(cell);
+      }
+      return `${('0' + dateObj.getUTCDate()).slice(-2)}/${('0' + (dateObj.getUTCMonth() + 1)).slice(-2)}/${dateObj.getUTCFullYear()}`;
+    };
 
     const columns = [{
         dataField: 'id',
@@ -92,7 +104,13 @@ function Comments(props) {
         dataField: 'status',
         text: `Status`,
         editor: {type: Type.SELECT, options: commentStatus}
-    }];
+    }, {
+      dataField: 'date',
+      text: `Fixed Date`,
+      editor: {type: Type.DATE},
+      formatter: formatDate,
+      csvFormatter: formatDate
+  }];
 
     const showAllComments = (commentData) => {
         allComment.push(commentData.author.displayName+'('+new Date(commentData.createdDate).toLocaleDateString("en-IN")+')'+' - '+commentData.text);
@@ -102,7 +120,7 @@ function Comments(props) {
                     showAllComments(element);
                 }
             })
-        };
+        }
         return allComment;
     }
 
@@ -113,10 +131,12 @@ function Comments(props) {
             name: props.match.params.projectName,
             id: props.match.params.id
         }
+        console.log('props', props);
         axios.post(baseUrl+'/comments', data)
             .then(res => {
                 let prqDetail = (res.data.detail).filter((data)=>data.id == props.match.params.id);
                 let count = 0;
+                const prqTitle = prqDetail[0].screenName;
                 res.data.data.values.filter((data)=>{
 
                     if(data.action === 'COMMENTED'){
@@ -127,7 +147,7 @@ function Comments(props) {
                             commentData.push(
                                 {
                                     id: count,
-                                    screen : prqDetail[0].screenName,
+                                    screen : prqTitle,
                                     comments: allComment.map((data, i)=><p id={i} key={i}> {data.toString()} </p>),
                                     developer: prqDetail[0].name,
                                     effortMin : "",
@@ -143,7 +163,8 @@ function Comments(props) {
                                     PRQcommentsgivenby: data.comment.author.displayName,
                                     commentDate: new Date(data.createdDate).toLocaleDateString("en-IN"),
                                     commentDateString: data.createdDate,
-                                    status: ""
+                                    status: "",
+                                    date: ""
                                 }
                             )
                         }
@@ -151,12 +172,13 @@ function Comments(props) {
                 });
                 setLoading(false);
                 setCommentListState(commentData);
+                setPRQTitle(prqTitle);
             })
             .catch(err => console.log(err))
     }, []);
     return (
         <div className="row nopadding">
-            <div className="col-md-12 nopadding">
+            <div className="col-md-12">
                 <div className="h-100 row align-items-center mrg-200" style={{ display: loading  ? 'block': 'none'}}>
                     <div className="col-sm-12 offset-6">
                             <div className="spinner-border my-auto" role="status">
@@ -176,7 +198,7 @@ function Comments(props) {
                     {
                         props => (
                             <div>
-                            <ExportCSVButton { ...props.csvProps }>Export CSV!!</ExportCSVButton>
+                            <h4>{prqTitle} <ExportCSVButton className="btn-success float-right" { ...props.csvProps }>Export CSV!!</ExportCSVButton></h4>
                     <hr />
                     <BootstrapTable
                         { ...props.baseProps }
